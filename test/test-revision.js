@@ -21,7 +21,7 @@
 
 var testCase = require('nodeunit').testCase;
 var crypto = require('crypto');
-var Revision = require('../lib/canape-revision').Revision;
+var Revision = require('../lib/canape-revision');
 
 module.exports = testCase({
   'Canape Revision': testCase({
@@ -126,7 +126,7 @@ module.exports = testCase({
 
       var docRev = Revision.compute(doc);
       var expectedRev = Revision.compute(expected);
-      // expected._rev now exists, make sure it's not modifying the rev 
+      // expected._rev now exists, make sure it's not modifying the rev
       var reCheckRev = Revision.compute(expected);
 
       test.strictEqual(docRev.hash, expectedHash);
