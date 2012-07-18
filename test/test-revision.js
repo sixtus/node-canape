@@ -63,7 +63,7 @@ module.exports = testCase({
       test.strictEqual(newRev.hash, '123');
       test.strictEqual(newRev.toString(), '6-123');
       test.strictEqual(newRev.toJSON(), '6-123');
-      test.strictEqual(newRev.replaced, '5-def');
+      test.strictEqual(newRev.replaced.toString(), '5-def');
       test.done();
     },
     'constructor with same rev': function(test) {
@@ -73,17 +73,6 @@ module.exports = testCase({
       test.strictEqual(newRev.toString(), '5-def');
       test.strictEqual(newRev.toJSON(), '5-def');
       test.ok(!newRev.replaced);
-      test.done();
-    },
-    'constructor with [revs]': function(test) {
-      var arrayRevs = new Revision(['10-def', '2-345', '2-345', '10-abc', '1-abc']);
-      test.ok(Array.isArray(arrayRevs));
-      test.strictEqual(arrayRevs.length, 4);
-      test.ok(arrayRevs[0] instanceof Revision);
-      test.ok(arrayRevs[1] instanceof Revision);
-      test.ok(arrayRevs[2] instanceof Revision);
-      test.ok(arrayRevs[3] instanceof Revision);
-      test.strictEqual(JSON.stringify(arrayRevs), '["1-abc","2-345","10-abc","10-def"]');
       test.done();
     },
     'idempotent revision computation': function(test) {
@@ -138,21 +127,13 @@ module.exports = testCase({
       expected.a = false;
       doc.a = false;
 
-      // compute again using alternative syntaxes
-      var docRev2 = new Revision(doc);
-      expectedRev = Revision(expected); // omiting 'new' only works for documents
+      expectedRev = Revision.compute(expected);
+      docRev = Revision.compute(doc);
 
-      // we deleted expected._rev so the updateCount should be 1
+      // the hashes should be the same, but docRev should be 2 as we deleted expected._rev only;
       test.strictEqual(expectedRev.updateCount, 1);
-
-      // doc's updateCount should be 2 (because we didn't delete doc._rev)
-      test.strictEqual(docRev2.updateCount, 2);
-
-      // but their hash should be same
-      test.strictEqual(docRev2.hash, expectedRev.hash);
-
-      // also doc should correctly report a replaced hash
-      test.strictEqual(docRev2.replaced.toString(), docRev.toString());
+      test.strictEqual(docRev.updateCount, 2);
+      test.strictEqual(docRev.hash, expectedRev.hash);
 
       test.done();
     }
