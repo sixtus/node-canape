@@ -34,6 +34,87 @@ module.exports = testCase({
   }),
   'Canape Merge Algorithm': testCase({
     'simple update': function(test) {
+      var value = {
+        _id: 'docid',
+        exists: true
+      };
+
+      var doc = new Document();
+      test.ok(doc.update(deepClone(value)));
+
+      test.strictEqual(doc.id, 'docid');
+      test.strictEqual(doc.rev.updateCount, 1);
+      test.ok(doc.rev.hash);
+
+      var compareValue = deepClone(doc.body);
+      delete compareValue._rev;
+      delete compareValue._meta;
+      test.deepEqual(compareValue, value);
+      test.done();
+    },
+    'conflicting update': function(test) {
+      var value = {
+        _id: 'docid',
+        exists: true
+      };
+
+      var conflict = {
+        _id: 'docid',
+        somethingElse: true
+      };
+
+      var doc = new Document();
+      test.ok(doc.update(deepClone(value)));
+      test.ok(!doc.update(deepClone(conflict)));
+      test.strictEqual(doc.numberOfConflicts, 0);
+
+      var compareValue = deepClone(doc.body);
+      delete compareValue._rev;
+      delete compareValue._meta;
+      test.deepEqual(compareValue, value);
+      test.done();
+    },
+    'simple update replay': function(test) {
+      var value = {
+        _id: 'id',
+        exists: true
+      };
+
+      var doc = new Document();
+      test.ok(doc.update(deepClone(value)));
+      test.ok(doc.update(deepClone(value)));
+
+      test.strictEqual(doc.history.length, 0);
+      test.strictEqual(doc.conflicts, undefined);
+      test.ok(value.exists);
+
+      var compareValue = deepClone(doc.body);
+      delete compareValue._rev;
+      delete compareValue._meta;
+      test.deepEqual(compareValue, value);
+      test.done();
+    },
+    'simple merge replay': function(test) {
+      var value = {
+        _id: 'id',
+        exists: true
+      };
+
+      var doc = new Document();
+      doc.merge(deepClone(value));
+      doc.merge(deepClone(value));
+
+      test.strictEqual(doc.history.length, 0);
+      test.strictEqual(doc.conflicts, undefined);
+      test.ok(value.exists);
+
+      var compareValue = deepClone(doc.body);
+      delete compareValue._rev;
+      delete compareValue._meta;
+      test.deepEqual(compareValue, value);
+      test.done();
+    },
+    'simple merge update': function(test) {
       var docA = {
         _id: 'doc',
         a: true
@@ -70,3 +151,7 @@ module.exports = testCase({
     }
   })
 });
+
+function deepClone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
